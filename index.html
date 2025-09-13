@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gradient Descent Practice</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #22c55e;
+        --accent-2: #60a5fa;
+        --warn: #fbbf24;
+        --error: #f87171;
+        --ok: #34d399;
+        --border: #1f2937;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+          Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        line-height: 1.5;
+      }
+      .container {
+        max-width: 940px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+      h1 {
+        font-size: 1.75rem;
+        margin: 0 0 8px 0;
+      }
+      .subtitle {
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      }
+      .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+      .row > div { flex: 1 1 auto; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .eq { font-size: 1.05rem; }
+      .pill {
+        display: inline-block; padding: 2px 8px; border-radius: 999px;
+        background: rgba(96, 165, 250, 0.12); color: #bfdbfe; border: 1px solid rgba(96, 165, 250, 0.35);
+      }
+      .muted { color: var(--muted); }
+      /* Input/check UI styles removed */
+      details {
+        background: #0b1220; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+      }
+      summary { cursor: pointer; font-weight: 600; }
+      .hr { height: 1px; background: var(--border); margin: 16px 0; }
+      .note { font-size: .95rem; color: var(--muted); }
+      .kbd { border: 1px solid var(--border); border-bottom-width: 2px; padding: 1px 6px; border-radius: 6px; background: #0b1220; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    </style>
+    <script>
+      // Configure MathJax for inline $...$ and display $$...$$ math
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: {
+          skipHtmlTags: ['script','noscript','style','textarea','pre','code']
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Gradient Descent Practice</h1>
+  <div class="subtitle">Work out the steps offline; expand the solutions to check your work. All values are exact fractions.</div>
+
+      <div class="card" role="region" aria-labelledby="q-title">
+        <div id="q-title" class="row" style="justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div class="pill mono">Question 1</div>
+            <div class="muted" style="margin-top: 8px">Compute x₁.</div>
+          </div>
+          <div class="note">Keep everything as exact fractions.</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid" aria-live="polite">
+          <div>
+            <div class="muted">Function</div>
+            <div id="f-display" class="eq"></div>
+          </div>
+          <div>
+            <div class="muted">Derivative</div>
+            <div id="fp-display" class="eq"></div>
+          </div>
+          <div>
+            <div class="muted">Start</div>
+            <div class="eq">x₀ = <span id="x0-display"></span></div>
+          </div>
+          <div>
+            <div class="muted">Learning rate</div>
+            <div class="eq"><span id="eta-display-full"></span></div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <details>
+          <summary>Show worked solution</summary>
+          <div style="margin-top: 10px;">
+            <div class="eq">f′(x₀) = <span id="grad-at-x0"></span></div>
+            <div class="eq"><span id="eta-grad-line"></span></div>
+            <div class="eq"><span id="x1-work"></span></div>
+            <div class="eq" style="margin-top: 6px;">Answer: <strong id="x1-answer"></strong></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card" role="region" aria-labelledby="q2-title" style="margin-top: 18px;">
+        <div id="q2-title" class="row" style="justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div class="pill mono">Question 2</div>
+            <div class="muted" style="margin-top: 8px">Compute x₁ and x₂.</div>
+          </div>
+          <div class="note">Keep everything as exact fractions.</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid" aria-live="polite">
+          <div>
+            <div class="muted">Function</div>
+            <div id="q2-f-display" class="eq"></div>
+          </div>
+          <div>
+            <div class="muted">Derivative</div>
+            <div id="q2-fp-display" class="eq"></div>
+          </div>
+          <div>
+            <div class="muted">Start</div>
+            <div class="eq">x₀ = <span id="q2-x0-display"></span></div>
+          </div>
+          <div>
+            <div class="muted">Learning rate</div>
+            <div class="eq"><span id="q2-eta-display-full"></span></div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <details>
+          <summary>Show worked solution</summary>
+          <div style="margin-top: 10px;">
+            <div class="eq">f′(x₀) = <span id="q2-grad-at-x0"></span></div>
+            <div class="eq"><span id="q2-eta-grad0-line"></span></div>
+            <div class="eq"><span id="q2-x1-work"></span></div>
+            <div class="eq">f′(x₁) = <span id="q2-grad-at-x1"></span></div>
+            <div class="eq"><span id="q2-eta-grad1-line"></span></div>
+            <div class="eq"><span id="q2-x2-work"></span></div>
+            <div class="eq" style="margin-top: 6px;">Answer: <strong id="q2-x2-answer"></strong></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card" role="region" aria-labelledby="q3-title" style="margin-top: 18px;">
+        <div id="q3-title" class="row" style="justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div class="pill mono">Question 3</div>
+            <div class="muted" style="margin-top: 8px">Compute x₁, x₂, and x₃.</div>
+          </div>
+          <div class="note">Keep everything as exact fractions.</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid" aria-live="polite">
+          <div>
+            <div class="muted">Function</div>
+            <div id="q3-f-display" class="eq"></div>
+          </div>
+          <div>
+            <div class="muted">Derivative</div>
+            <div id="q3-fp-display" class="eq"></div>
+          </div>
+          <div>
+            <div class="muted">Start</div>
+            <div class="eq">x₀ = <span id="q3-x0-display"></span></div>
+          </div>
+          <div>
+            <div class="muted">Learning rate</div>
+            <div class="eq"><span id="q3-eta-display-full"></span></div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <details>
+          <summary>Show worked solution</summary>
+          <div style="margin-top: 10px;">
+            <div class="eq">f′(x₀) = <span id="q3-grad-at-x0"></span></div>
+            <div class="eq"><span id="q3-eta-grad0-line"></span></div>
+            <div class="eq"><span id="q3-x1-work"></span></div>
+            <div class="eq">f′(x₁) = <span id="q3-grad-at-x1"></span></div>
+            <div class="eq"><span id="q3-eta-grad1-line"></span></div>
+            <div class="eq"><span id="q3-x2-work"></span></div>
+            <div class="eq">f′(x₂) = <span id="q3-grad-at-x2"></span></div>
+            <div class="eq"><span id="q3-eta-grad2-line"></span></div>
+            <div class="eq"><span id="q3-x3-work"></span></div>
+            <div class="eq" style="margin-top: 6px;">Answer: <strong id="q3-x3-answer"></strong></div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <script>
+      // Fraction utility with exact rational arithmetic
+      class Fraction {
+        constructor(n, d = 1) {
+          if (d === 0) throw new Error('Denominator cannot be 0');
+          if (!Number.isInteger(n) || !Number.isInteger(d)) {
+            throw new Error('Fraction expects integer numerator/denominator');
+          }
+          // Normalize sign to denominator positive
+          if (d < 0) { n = -n; d = -d; }
+          const g = Fraction.#gcd(Math.abs(n), d);
+          this.n = n / g;
+          this.d = d / g;
+        }
+
+        static zero() { return new Fraction(0,1); }
+        static one() { return new Fraction(1,1); }
+        static from(x) {
+          if (x instanceof Fraction) return x;
+          if (typeof x === 'number') {
+            if (!Number.isFinite(x)) throw new Error('Non-finite number');
+            // Restrict to integers only to keep exactness
+            if (!Number.isInteger(x)) throw new Error('Use Fraction.fromString for non-integers');
+            return new Fraction(x, 1);
+          }
+          if (typeof x === 'string') return Fraction.fromString(x);
+          throw new Error('Unsupported type for Fraction.from');
+        }
+
+        static fromString(s) {
+          if (s == null) throw new Error('Empty');
+          s = String(s).trim();
+          // Disallow decimals to ensure exactness
+          if (/\.|e\+?|e-/.test(s)) throw new Error('Decimals/scientific not allowed');
+          // Support optional leading +/-, integer or a/b
+          const m = s.match(/^([+-])?\s*(\d+)(?:\s*\/\s*(\d+))?$/);
+          if (!m) throw new Error('Invalid fraction format');
+          const sign = m[1] === '-' ? -1 : 1;
+          const a = parseInt(m[2], 10);
+          const b = m[3] ? parseInt(m[3], 10) : 1;
+          return new Fraction(sign * a, b);
+        }
+
+        add(o) {
+          const a = this, b = Fraction.from(o);
+          return new Fraction(a.n*b.d + b.n*a.d, a.d*b.d);
+        }
+        sub(o) {
+          const a = this, b = Fraction.from(o);
+          return new Fraction(a.n*b.d - b.n*a.d, a.d*b.d);
+        }
+        mul(o) {
+          const a = this, b = Fraction.from(o);
+          return new Fraction(a.n*b.n, a.d*b.d);
+        }
+        div(o) {
+          const a = this, b = Fraction.from(o);
+          if (b.n === 0) throw new Error('Division by zero');
+          return new Fraction(a.n*b.d, a.d*b.n);
+        }
+        neg() { return new Fraction(-this.n, this.d); }
+        eq(o) {
+          const b = Fraction.from(o);
+          return this.n === b.n && this.d === b.d;
+        }
+        toString() { return this.d === 1 ? String(this.n) : `${this.n}/${this.d}`; }
+        toHTML() { return this.toString(); }
+        toTeX() { return this.d === 1 ? String(this.n) : `\\tfrac{${this.n}}{${this.d}}`; }
+        static #gcd(a, b) { while (b) [a, b] = [b, a % b]; return a || 1; }
+      }
+
+      // Example problem
+      // f(x) = (1/2) x^2 - (3/4) x + 1/3
+      // f'(x) = x - 3/4
+      // x0 = 2/3, eta = 1/2
+      const problem = {
+        fTex: `f(x)=\\tfrac{1}{2}x^2 - \\tfrac{3}{4}x + \\tfrac{1}{3}`,
+        fpTex: `f'(x)=x - \\tfrac{3}{4}`,
+        x0: new Fraction(2,3),
+         eta: new Fraction(1,2),
+        grad: (x) => Fraction.from(x).sub(new Fraction(3,4)), // x - 3/4
+      };
+
+      // Independent problem for Question 2
+      // f(x) = x^2 - (1/2)x, so f'(x) = 2x - 1/2
+      // Choose x0 = 1/2, eta = 1/3 for neat fractions
+      const problem2 = {
+        fTex: `f(x)=x^2 - \\tfrac{1}{2}x`,
+        fpTex: `f'(x)=2x - \\tfrac{1}{2}`,
+        x0: new Fraction(1,2),
+         eta: new Fraction(1,3),
+        grad: (x) => Fraction.from(x).mul(2).sub(new Fraction(1,2)), // 2x - 1/2
+      };
+
+      // Independent problem for Question 3
+      // f(x) = (3/2)x^2 - x, so f'(x) = 3x - 1
+      // Choose x0 = 3/4, eta = 1/4 for neat fractions
+      const problem3 = {
+        fTex: `f(x)=\\tfrac{3}{2}x^2 - x`,
+        fpTex: `f'(x)=3x - 1`,
+        x0: new Fraction(3,4),
+        eta: new Fraction(1,4),
+        grad: (x) => Fraction.from(x).mul(3).sub(1), // 3x - 1
+      };
+
+      function computeX1({ x0, eta, grad }) {
+        const g = grad(x0); // f'(x0)
+        const step = eta.mul(g); // eta * f'(x0)
+        const x1 = x0.sub(step); // x0 - step
+        return { g, step, x1 };
+      }
+
+      function computeX2({ x0, eta, grad }) {
+        const { g: g0, step: step0, x1 } = computeX1({ x0, eta, grad });
+        const g1 = grad(x1);
+        const step1 = eta.mul(g1);
+        const x2 = x1.sub(step1);
+        return { g0, step0, x1, g1, step1, x2 };
+      }
+
+      function computeX3({ x0, eta, grad }) {
+        const { g0, step0, x1, g1, step1, x2 } = computeX2({ x0, eta, grad });
+        const g2 = grad(x2);
+        const step2 = eta.mul(g2);
+        const x3 = x2.sub(step2);
+        return { g0, step0, x1, g1, step1, x2, g2, step2, x3 };
+      }
+
+      // Render problem
+  const fEl = document.getElementById('f-display');
+  const fpEl = document.getElementById('fp-display');
+  const x0El = document.getElementById('x0-display');
+  const etaFullEl = document.getElementById('eta-display-full');
+  const gradAtEl = document.getElementById('grad-at-x0');
+  const etaGradLineEl = document.getElementById('eta-grad-line');
+  const x1WorkEl = document.getElementById('x1-work');
+  const x1AnsEl = document.getElementById('x1-answer');
+
+  // Question 2 elements
+  const f2El = document.getElementById('q2-f-display');
+  const fp2El = document.getElementById('q2-fp-display');
+  const x0_2El = document.getElementById('q2-x0-display');
+  const eta2FullEl = document.getElementById('q2-eta-display-full');
+  const g0El = document.getElementById('q2-grad-at-x0');
+  const etaG0LineEl = document.getElementById('q2-eta-grad0-line');
+  const x1Work2El = document.getElementById('q2-x1-work');
+  const g1El = document.getElementById('q2-grad-at-x1');
+  const etaG1LineEl = document.getElementById('q2-eta-grad1-line');
+  const x2WorkEl = document.getElementById('q2-x2-work');
+  const x2AnsEl = document.getElementById('q2-x2-answer');
+
+  // Question 3 elements
+  const f3El = document.getElementById('q3-f-display');
+  const fp3El = document.getElementById('q3-fp-display');
+  const x0_3El = document.getElementById('q3-x0-display');
+  const eta3FullEl = document.getElementById('q3-eta-display-full');
+  const g0_3El = document.getElementById('q3-grad-at-x0');
+  const etaG0_3LineEl = document.getElementById('q3-eta-grad0-line');
+  const x1Work3El = document.getElementById('q3-x1-work');
+  const g1_3El = document.getElementById('q3-grad-at-x1');
+  const etaG1_3LineEl = document.getElementById('q3-eta-grad1-line');
+  const x2Work3El = document.getElementById('q3-x2-work');
+  const g2_3El = document.getElementById('q3-grad-at-x2');
+  const etaG2_3LineEl = document.getElementById('q3-eta-grad2-line');
+  const x3WorkEl = document.getElementById('q3-x3-work');
+  const x3AnsEl = document.getElementById('q3-x3-answer');
+
+      function render() {
+  fEl.innerHTML = `$${problem.fTex}$`;
+  fpEl.innerHTML = `$${problem.fpTex}$`;
+  x0El.innerHTML = `$${problem.x0.toTeX()}$`;
+         etaFullEl.innerHTML = `$\\eta = ${problem.eta.toTeX()}$`;
+
+        const { g, step, x1 } = computeX1(problem);
+  gradAtEl.innerHTML = `$${g.toTeX()}$`;
+  etaGradLineEl.innerHTML = `$\\eta \\cdot f'(x_0) = ${problem.eta.toTeX()} \\cdot ${g.toTeX()} = ${step.toTeX()}$`;
+  x1WorkEl.innerHTML = `$x_1 = x_0 - \\eta \\cdot f'(x_0) = ${problem.x0.toTeX()} - ${step.toTeX()} = ${x1.toTeX()}$`;
+  x1AnsEl.innerHTML = `$${x1.toTeX()}$`;
+
+  // Render Question 2 (two steps)
+  f2El.innerHTML = `$${problem2.fTex}$`;
+  fp2El.innerHTML = `$${problem2.fpTex}$`;
+  x0_2El.innerHTML = `$${problem2.x0.toTeX()}$`;
+  eta2FullEl.innerHTML = `$\\eta = ${problem2.eta.toTeX()}$`;
+
+  const { g0, step0, x1: x1b, g1, step1, x2 } = computeX2(problem2);
+  g0El.innerHTML = `$${g0.toTeX()}$`;
+  etaG0LineEl.innerHTML = `$\\eta \\cdot f'(x_0) = ${problem2.eta.toTeX()} \\cdot ${g0.toTeX()} = ${step0.toTeX()}$`;
+  x1Work2El.innerHTML = `$x_1 = x_0 - \\eta \\cdot f'(x_0) = ${problem2.x0.toTeX()} - ${step0.toTeX()} = ${x1b.toTeX()}$`;
+  g1El.innerHTML = `$${g1.toTeX()}$`;
+  etaG1LineEl.innerHTML = `$\\eta \\cdot f'(x_1) = ${problem2.eta.toTeX()} \\cdot ${g1.toTeX()} = ${step1.toTeX()}$`;
+  x2WorkEl.innerHTML = `$x_2 = x_1 - \\eta \\cdot f'(x_1) = ${x1b.toTeX()} - ${step1.toTeX()} = ${x2.toTeX()}$`;
+  x2AnsEl.innerHTML = `$${x2.toTeX()}$`;
+
+  // Render Question 3 (three steps)
+  f3El.innerHTML = `$${problem3.fTex}$`;
+  fp3El.innerHTML = `$${problem3.fpTex}$`;
+  x0_3El.innerHTML = `$${problem3.x0.toTeX()}$`;
+  eta3FullEl.innerHTML = `$\\eta = ${problem3.eta.toTeX()}$`;
+
+  const { g0: g0c, step0: step0c, x1: x1c, g1: g1c, step1: step1c, x2: x2c, g2: g2c, step2: step2c, x3 } = computeX3(problem3);
+  g0_3El.innerHTML = `$${g0c.toTeX()}$`;
+  etaG0_3LineEl.innerHTML = `$\\eta \\cdot f'(x_0) = ${problem3.eta.toTeX()} \\cdot ${g0c.toTeX()} = ${step0c.toTeX()}$`;
+  x1Work3El.innerHTML = `$x_1 = x_0 - \\eta \\cdot f'(x_0) = ${problem3.x0.toTeX()} - ${step0c.toTeX()} = ${x1c.toTeX()}$`;
+  g1_3El.innerHTML = `$${g1c.toTeX()}$`;
+  etaG1_3LineEl.innerHTML = `$\\eta \\cdot f'(x_1) = ${problem3.eta.toTeX()} \\cdot ${g1c.toTeX()} = ${step1c.toTeX()}$`;
+  x2Work3El.innerHTML = `$x_2 = x_1 - \\eta \\cdot f'(x_1) = ${x1c.toTeX()} - ${step1c.toTeX()} = ${x2c.toTeX()}$`;
+  g2_3El.innerHTML = `$${g2c.toTeX()}$`;
+  etaG2_3LineEl.innerHTML = `$\\eta \\cdot f'(x_2) = ${problem3.eta.toTeX()} \\cdot ${g2c.toTeX()} = ${step2c.toTeX()}$`;
+  x3WorkEl.innerHTML = `$x_3 = x_2 - \\eta \\cdot f'(x_2) = ${x2c.toTeX()} - ${step2c.toTeX()} = ${x3.toTeX()}$`;
+  x3AnsEl.innerHTML = `$${x3.toTeX()}$`;
+
+        // Typeset math after updating content
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise();
+        }
+      }
+
+      // No answer input or checking; students solve offline and can expand the worked solution.
+
+      // Ensure MathJax typesets after load as well
+      window.addEventListener('load', () => {
+        try { render(); } finally {
+          if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
